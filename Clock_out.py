@@ -6,7 +6,7 @@ from datetime import datetime
 
 st.set_page_config(
     page_title="Clock Out", 
-    page_icon="⏰", # This emoji will show up in the browser tab
+    page_icon="🕒",
     layout="centered"
 )
 
@@ -16,22 +16,57 @@ def check_if_minute_is_over(hour, min):
         hour += 1
     return f"{str(hour).zfill(2)}:{str(min).zfill(2)}"
 
+def extract_time(time):
+    # Handling different separators (., :)
+    time = time.replace(".", ":")
+    if ":" in time:
+        h, m = map(int, time.split(":"))
+    else:
+        # Handle formats like 0830 or 830
+        if len(time) == 4:
+            h, m = int(time[:2]), int(time[2:])
+        else:
+            h, m = int(time[:1]), int(time[1:])
+    
+    if m > 59 or h > 23:
+        return None, "Invalid time format."
+    else:
+        return (h, m), None
+
+def check_ot_time_left(ot_time):
+
+    result_data, error = extract_time(ot_time)
+
+    if error:
+        st.error(error)
+        
+    h, m = result_data
+
+    tz = pytz.timezone('Asia/Kuala_Lumpur') # Sets the timezone to Malaysia
+    now = datetime.now(tz)
+
+    now_total = now.hour * 60 + now.minute
+        
+    ot_total = h * 60 + m
+    
+    if ot_total > now_total:
+        diff = ot_total - now_total
+        if diff > 60:
+            return f"🔴"
+        else:
+            return f"🟡"
+    else:
+        return f"🟢"
+
+
 def calculate_times(clock_in_str):
     is_late =  False
     try:
-        # Handling different separators (., :)
-        clock_in_str = clock_in_str.replace(".", ":")
-        if ":" in clock_in_str:
-            h, m = map(int, clock_in_str.split(":"))
-        else:
-            # Handle formats like 0830 or 830
-            if len(clock_in_str) == 4:
-                h, m = int(clock_in_str[:2]), int(clock_in_str[2:])
-            else:
-                h, m = int(clock_in_str[:1]), int(clock_in_str[1:])
-        
-        if m > 59 or h > 23:
-            return None, "Invalid time format."
+        result_data, error = extract_time(clock_in_str)
+        if error:
+            st.error(error)
+            
+        h, m = result_data
 
         # Logic for thresholds
         combine_time = int(f"{h}{str(m).zfill(2)}")
@@ -46,7 +81,7 @@ def calculate_times(clock_in_str):
             pass 
         elif 930 < combine_time < 1130:
             adj_h, adj_m = 9, 30
-            is_late = True  # Add this flag
+            is_late = True
         elif combine_time < 1215:
             adj_h, adj_m, half_day_flag = 7, 30, 0
         elif 1215 <= combine_time <= 1415:
@@ -63,10 +98,8 @@ def calculate_times(clock_in_str):
 
 # --- Streamlit UI ---
 
-st.set_page_config(page_title="Clock Out Calculator (SOEM)", page_icon="🕒")
-
-st.title("🕒 Clock Out Calculator (SOEM)")
-st.markdown("Developed by Hazim (C) 2026")
+st.title("🕒 Clock Out (SOEM)")
+# st.markdown("Developed by Hazim (C) 2026")
 
 # Input Section
 clock_in = st.text_input("Enter your clock-in time (24H Format, e.g., 08:30 or 830):")
@@ -80,7 +113,7 @@ if clock_in:
         h, m, half_day_flag, is_late = result_data
 
         if is_late:
-            st.warning("⚠️ !!! LATE !!! Your clock-in has been adjusted to 09:30")
+            st.warning("⚠️ LATE!  \nYour clock-in has been adjusted to 09:30")
         
         # Half Day Calculation
         half_out = check_if_minute_is_over(h + 4, m + 45)
@@ -122,4 +155,4 @@ if clock_in:
                 ot_full = check_if_minute_is_over(ot_h, base_m + 10)
                 ot_half = check_if_minute_is_over(ot_h, base_m + 40)
                 
-                st.write(f"**OT {i} Hour:** {ot_full} | **OT {i}.5 Hour:** {ot_half}")
+                st.write(f"**OT {i} Hour:** {ot_full} " + check_ot_time_left(ot_full) + f" | **OT {i}.5 Hour:** {ot_half} "  + check_ot_time_left(ot_half))
