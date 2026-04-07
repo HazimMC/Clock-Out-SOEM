@@ -10,8 +10,6 @@ st.set_page_config(
     layout="centered"
 )
 
-is_late =  False
-
 def check_if_minute_is_over(hour, min):
     while min >= 60:
         min -= 60
@@ -19,6 +17,7 @@ def check_if_minute_is_over(hour, min):
     return f"{str(hour).zfill(2)}:{str(min).zfill(2)}"
 
 def calculate_times(clock_in_str):
+    is_late =  False
     try:
         # Handling different separators (., :)
         clock_in_str = clock_in_str.replace(".", ":")
@@ -58,7 +57,7 @@ def calculate_times(clock_in_str):
         elif combine_time > 1415:
             adj_h, adj_m, half_day_flag = 9, 30, 0
 
-        return (adj_h, adj_m, half_day_flag), None
+        return (adj_h, adj_m, half_day_flag, is_late), None
     except Exception:
         return None, "Please enter time in a valid format (e.g., 08:30 or 830)."
 
