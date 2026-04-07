@@ -9,4 +9,4 @@ A simple Python tool to calculate clock-out times and OT.
 4. Wait for the terminal to open at the bottom.
 5. Type the following and press Enter:
    ```bash
-   python clock_out.py
+   python Clock_out.py
