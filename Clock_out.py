@@ -1,3 +1,4 @@
+import pytz
 import streamlit as st
 from datetime import datetime
 
@@ -86,7 +87,8 @@ if clock_in:
             st.metric("Full Day Clock Out", full_out_str)
 
         # Time Left Calculation
-        now = datetime.now()
+        tz = pytz.timezone('Asia/Kuala_Lumpur') # Sets the timezone to Malaysia
+        now = datetime.now(tz)
         now_total = now.hour * 60 + now.minute
         
         out_h, out_m = map(int, full_out_str.split(":"))
