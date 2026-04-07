@@ -10,6 +10,8 @@ st.set_page_config(
     layout="centered"
 )
 
+is_late =  False
+
 def check_if_minute_is_over(hour, min):
     while min >= 60:
         min -= 60
