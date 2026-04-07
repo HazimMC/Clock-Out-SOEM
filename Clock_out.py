@@ -4,6 +4,12 @@ from datetime import datetime
 
 # --- Logic Functions (Simplified for Streamlit) ---
 
+st.set_page_config(
+    page_title="Clock Out", 
+    page_icon="⏰", # This emoji will show up in the browser tab
+    layout="centered"
+)
+
 def check_if_minute_is_over(hour, min):
     while min >= 60:
         min -= 60
