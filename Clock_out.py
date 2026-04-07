@@ -43,9 +43,9 @@ def calculate_times(clock_in_str):
             adj_h, adj_m = 7, 30
         elif 730 <= combine_time <= 930:
             pass 
-        elif 930 < combine_time < 1000:
+        elif 930 < combine_time < 1130:
             adj_h, adj_m = 9, 30
-            st.warning(f"!!! Late !!!")
+            is_late = True  # Add this flag
         elif combine_time < 1215:
             adj_h, adj_m, half_day_flag = 7, 30, 0
         elif 1215 <= combine_time <= 1415:
@@ -77,6 +77,9 @@ if clock_in:
         st.error(error)
     else:
         h, m, half_day_flag = result_data
+
+        if is_late:
+            st.warning("⚠️ !!! LATE !!! Your clock-in has been adjusted to 09:30")
         
         # Half Day Calculation
         half_out = check_if_minute_is_over(h + 4, m + 45)
