@@ -61,9 +61,9 @@ def calculate_times(clock_in_str):
 
 # --- Streamlit UI ---
 
-st.set_page_config(page_title="Work Clock Calculator", page_icon="🕒")
+st.set_page_config(page_title="Clock Out Calculator (SOEM)", page_icon="🕒")
 
-st.title("🕒 Work Clock Calculator")
+st.title("🕒 Clock Out Calculator (SOEM)")
 st.markdown("Developed by Hazim (C) 2026")
 
 # Input Section
