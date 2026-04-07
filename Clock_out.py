@@ -1,244 +1,112 @@
-import os
+import streamlit as st
 from datetime import datetime
 
-Hour = 0
-Minutes = 0
-HalfDay_Flag = 1
-
-def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-def pause():
-    enter = input("\n\n***********PRESS ENTER TO CONTINUE***********")
-
-def set_time_if_pass_threshold(Time):
-
-    global Hour, Minutes, HalfDay_Flag
-
-    if Time < 730:
-        Hour = 7
-        Minutes = 30
-    elif Time >= 730 and Time <= 930:
-        return
-    elif Time > 930 and Time < 1000:
-        Hour = 9
-        Minutes = 30
-    elif Time < 1215:
-        Hour = 7
-        Minutes = 30
-        HalfDay_Flag = 0
-    elif Time >= 1215 and Time <= 1415:
-        HalfDay_Flag = 0
-        if Minutes < 45:
-            Minutes += 60
-            Hour -= 1
-
-        Minutes = Minutes - 45
-        Hour = Hour - 4
-    elif Time > 1415:
-        Hour = 9
-        Minutes = 30
-        HalfDay_Flag = 0
-
-def get_hour_and_minute(clock_in):
-
-    global Hour, Minutes
-
-    clock_in = clock_in.strip()
-
-    if len(clock_in) < 3:
-        input("Please enter correct time. Press Enter to exit...")
-        raise ValueError("Please enter correct time")
-
-    if "." in clock_in:
-        Hour, Minutes = clock_in.split(".", 1)
-    elif ":" in clock_in:
-        Hour, Minutes = clock_in.split(":", 1)
-    else:                                   # if user enters 825 (8:25)
-        if len(clock_in) == 4:
-            Hour = clock_in[:2]
-            Minutes = clock_in[2:]
-        elif len(clock_in) == 3:
-            Hour = clock_in[:1]
-            Minutes = clock_in[1:]
-        else:
-            input("Please enter correct time. Press Enter to exit...")
-            raise ValueError("Please enter correct time")
-
-    #print("Minute: " + str(Minutes))
-    #print("Hour: " + str(Hour))
-    
-    try:
-        Hour = Hour.strip()
-        Minutes = Minutes.strip().zfill(2)
-
-        Combine_Time = int(Hour + Minutes)
-        Hour = int(Hour)
-        Minutes = int(Minutes)
-
-        if Minutes > 59 or Hour > 23:
-            raise ValueError("Wrong time format")
-        
-        set_time_if_pass_threshold(Combine_Time)
-
-    except:
-        input("Wrong time format. Press Enter to exit...")
-        raise ValueError("Wrong time format")
-
+# --- Logic Functions (Simplified for Streamlit) ---
 
 def check_if_minute_is_over(hour, min):
-    time_result = []
-
     while min >= 60:
         min -= 60
         hour += 1
+    return f"{str(hour).zfill(2)}:{str(min).zfill(2)}"
 
-    if min < 10:
-        min = "0" + str(min)
-    else:
-        min = str(min)
-
-    hour = str(hour)
-
-    time_result.append(hour)
-    time_result.append(min)
-
-    return time_result
-
-def ot_time_list(hour, min):
-
-    ot_time = []
-    first_time_flag = 1
-
-    for i in range(1, 4):
-        hour = hour + 1
-
-        if first_time_flag == 1:
-            min = min + 10
-            first_time_flag = 0
-
-        ot_time = check_if_minute_is_over(hour, min)
-
-        print("OT of " + str(i) + " hour is at \t\t\t" + ot_time[0] + ":" + ot_time[1])
-
-        new_min = min + 30
-
-        ot_time = check_if_minute_is_over(hour, new_min)
-
-        print("OT of " + str(i) + " hour and 30 minutes is at \t" + ot_time[0] + ":" + ot_time[1])
-
-def pluralize(value, word):
-    return f" {word} " if value == 1 else f" {word}s "
-
-def check_time_left(hour, min):
-
-    clock_out_hour = int(hour)
-    clock_out_min = int(min)
-
-    now = datetime.now()
-
-    #print("\nCurrent Time: " + str(now.hour) + ":" + str(now.minute))
-
-    now_total_min = now.hour * 60 + now.minute
-    clock_out_total_min = clock_out_hour * 60 + clock_out_min
-
-    if clock_out_total_min > now_total_min:
-
-        diff_min = clock_out_total_min - now_total_min
-        hour_left = diff_min // 60
-        minute_left = diff_min % 60
-
-        if minute_left == 60:
-            minute_left = 0
-            hour_left += 1
-
-        message = "\nYou have "
-
-        if hour_left != 0:
-            message += str(hour_left) + pluralize(hour_left, "hour")
-        if hour_left != 0 and minute_left != 0:
-            message += "and "
-        if minute_left != 0:
-            message += str(minute_left) + pluralize(minute_left, "minute")
-        
-        message += "left for work today"
-
-        print(message)
-
-    else:
-        print("\nIt is time to go home")
-
-def main():
-
-    #clear_screen()
-    #print("Hazim (C) 2026. All rights reserved. \nCopyright Statement:\n\nThis software/firmware are \nprotected under relevant copyright laws")
-    #pause()
-
-    global Hour, Minutes, HalfDay_Flag
-    now = datetime.now()
-
-    clear_screen()
-
-    date = (str(now.day) + "-" + str(now.month) + "-" + str(now.year))
-    use_saved_time = False
-
-    ### Check if clock in time is saved in file ###
+def calculate_times(clock_in_str):
     try:
-        saved_clock_in = None
-        with open("clock_in_time.txt", "r+") as f:
-            for x in f:
-                #print(f"DEBUG: The string is '{x}'")
-                if date in x:
-                    parts = x.strip().split(" ", 1)
-                    if len(parts) == 2:
-                        saved_clock_in = parts[1]
+        # Handling different separators (., :)
+        clock_in_str = clock_in_str.replace(".", ":")
+        if ":" in clock_in_str:
+            h, m = map(int, clock_in_str.split(":"))
+        else:
+            # Handle formats like 0830 or 830
+            if len(clock_in_str) == 4:
+                h, m = int(clock_in_str[:2]), int(clock_in_str[2:])
+            else:
+                h, m = int(clock_in_str[:1]), int(clock_in_str[1:])
+        
+        if m > 59 or h > 23:
+            return None, "Invalid time format."
 
-            if saved_clock_in is not None:
-                clock_in = saved_clock_in
-                use_saved_time = True
-                print("Please enter your clock in time (ex: 08:30/24H Format): " + clock_in)
-    except:
-        pass
+        # Logic for thresholds
+        combine_time = int(f"{h}{str(m).zfill(2)}")
+        
+        # Default flags
+        half_day_flag = 1
+        adj_h, adj_m = h, m
 
-    if not use_saved_time:
-        clock_in = (input("Please enter your clock in time (ex: 08:30/24H Format): "))
+        if combine_time < 730:
+            adj_h, adj_m = 7, 30
+        elif 730 <= combine_time <= 930:
+            pass 
+        elif 930 < combine_time < 1000:
+            adj_h, adj_m = 9, 30
+        elif combine_time < 1215:
+            adj_h, adj_m, half_day_flag = 7, 30, 0
+        elif 1215 <= combine_time <= 1415:
+            half_day_flag = 0
+            # Adjustment logic
+            total_min = (h * 60 + m) - 45 - (4 * 60)
+            adj_h, adj_m = divmod(total_min, 60)
+        elif combine_time > 1415:
+            adj_h, adj_m, half_day_flag = 9, 30, 0
 
-    get_hour_and_minute(clock_in)
+        return (adj_h, adj_m, half_day_flag), None
+    except Exception:
+        return None, "Please enter time in a valid format (e.g., 08:30 or 830)."
 
-    ### Half Day Time ###
-    Half_Minutes = Minutes + 45
-    Half_Hour = Hour + 4
+# --- Streamlit UI ---
 
-    result_h = check_if_minute_is_over(Half_Hour, Half_Minutes)
+st.set_page_config(page_title="Work Clock Calculator", page_icon="🕒")
 
-    ### Normal Time ###
+st.title("🕒 Work Clock Calculator")
+st.markdown("Developed by Hazim (C) 2026")
 
-    print("")
+# Input Section
+clock_in = st.text_input("Enter your clock-in time (24H Format, e.g., 08:30 or 830):")
 
-    Minutes = Minutes + 30
-    Hour = Hour + 9
-
-    result = check_if_minute_is_over(Hour, Minutes)
-
-    if HalfDay_Flag == 1 and int(now.hour) < 15:
-        print("Half Day clock out time is at " + result_h[0] + ":" + result_h[1])
-
-    print("Clock out time is at " + result[0] + ":" + result[1])
-
-    ### Time left for work ###
-    check_time_left(result[0], result[1])
-
-    ### OT Time ###
-    enable = input("\nList OT times? (y/n): ")
-    if enable.lower() == 'y':
-        ot_time_list(Hour, Minutes)
-        pause()
-
+if clock_in:
+    result_data, error = calculate_times(clock_in)
     
-    ### Save clock in time to file ###
-    if not use_saved_time:
-        with open("clock_in_time.txt", "a") as f:
-            f.write(date + " " + clock_in + "\n")
+    if error:
+        st.error(error)
+    else:
+        h, m, half_day_flag = result_data
+        
+        # Half Day Calculation
+        half_out = check_if_minute_is_over(h + 4, m + 45)
+        
+        # Normal Calculation (9h 30m shift)
+        full_out_str = check_if_minute_is_over(h + 9, m + 30)
+        
+        # --- Display Results ---
+        st.divider()
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            if half_day_flag == 1:
+                st.metric("Half Day Clock Out", half_out)
+            st.metric("Full Day Clock Out", full_out_str)
 
-if __name__ == "__main__":
-    main()
+        # Time Left Calculation
+        now = datetime.now()
+        now_total = now.hour * 60 + now.minute
+        
+        out_h, out_m = map(int, full_out_str.split(":"))
+        out_total = out_h * 60 + out_m
+        
+        if out_total > now_total:
+            diff = out_total - now_total
+            hrs, mins = divmod(diff, 60)
+            st.warning(f"⏳ You have **{hrs}h {mins}m** left for work today.")
+        else:
+            st.success("🎉 It's time to go home!")
+
+        # OT Section
+        st.divider()
+        with st.expander("See Overtime (OT) Schedule"):
+            base_h, base_m = h + 9, m + 30
+            for i in range(1, 4):
+                ot_h = base_h + i
+                # +10 mins for first OT, then +30 intervals
+                ot_full = check_if_minute_is_over(ot_h, base_m + 10)
+                ot_half = check_if_minute_is_over(ot_h, base_m + 40)
+                
+                st.write(f"**OT {i} Hour:** {ot_full} | **OT {i}.5 Hour:** {ot_half}")
