@@ -77,7 +77,7 @@ if clock_in:
     if error:
         st.error(error)
     else:
-        h, m, half_day_flag = result_data
+        h, m, half_day_flag, is_late = result_data
 
         if is_late:
             st.warning("⚠️ !!! LATE !!! Your clock-in has been adjusted to 09:30")
