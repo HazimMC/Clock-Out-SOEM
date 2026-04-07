@@ -45,6 +45,7 @@ def calculate_times(clock_in_str):
             pass 
         elif 930 < combine_time < 1000:
             adj_h, adj_m = 9, 30
+            st.warning(f"!!! Late !!!")
         elif combine_time < 1215:
             adj_h, adj_m, half_day_flag = 7, 30, 0
         elif 1215 <= combine_time <= 1415:
@@ -103,7 +104,7 @@ if clock_in:
         if out_total > now_total:
             diff = out_total - now_total
             hrs, mins = divmod(diff, 60)
-            st.warning(f"⏳ You have **{hrs}h {mins}m** left for work today.")
+            st.warning(f"⏳ You have **{hrs}h {mins}m** left for work today")
         else:
             st.success("🎉 It's time to go home!")
 
