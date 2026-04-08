@@ -1,4 +1,6 @@
+# streamlit run Clock_out.py
 import pytz
+import time
 import streamlit as st
 from datetime import datetime
 
@@ -132,18 +134,9 @@ if clock_in:
 
         # Time Left Calculation
         tz = pytz.timezone('Asia/Kuala_Lumpur') # Sets the timezone to Malaysia
-        now = datetime.now(tz)
-        now_total = now.hour * 60 + now.minute
-        
-        out_h, out_m = map(int, full_out_str.split(":"))
-        out_total = out_h * 60 + out_m
-        
-        if out_total > now_total:
-            diff = out_total - now_total
-            hrs, mins = divmod(diff, 60)
-            st.warning(f"⏳ You have **{hrs}h {mins}m** left for work today")
-        else:
-            st.success("🎉 It's time to go home!")
+        # Run the countdown loop
+        st.divider()
+        countdown_placeholder = st.empty()
 
         # OT Section
         st.divider()
@@ -156,3 +149,22 @@ if clock_in:
                 ot_half = check_if_minute_is_over(ot_h, base_m + 40)
                 
                 st.write(f"**OT {i} Hour:** {ot_full} " + check_ot_time_left(ot_full) + f" | **OT {i}.5 Hour:** {ot_half} "  + check_ot_time_left(ot_half))
+
+        while True:
+            now = datetime.now(tz)
+            now_total = now.hour * 60 * 60 + now.minute * 60 + now.second
+            
+            out_h, out_m = map(int, full_out_str.split(":"))
+            out_total = out_h * 60 * 60 + out_m * 60 # Convert target to seconds
+            
+            if out_total > now_total:
+                seconds_left = out_total - now_total
+                hrs, remainder = divmod(seconds_left, 3600)
+                mins, secs = divmod(remainder, 60)
+                
+                # This overwrites the placeholder every second
+                countdown_placeholder.warning(f"⏳ Time until freedom: **{hrs}h {mins}m {secs}s**")
+                time.sleep(1) # Wait 1 second before looping
+            else:
+                countdown_placeholder.success("🎉 It's time to go home!")
+                break # Stop the loop once you reach the time
