@@ -53,10 +53,10 @@ def check_ot_time_left(ot_time):
     
     if ot_total > now_total:
         diff = ot_total - now_total
-        if diff > 60:
-            return f"🔴"
-        else:
+        if diff < 30:
             return f"🟡"
+        else:
+            return f"🔴"
     else:
         return f"🟢"
 
@@ -163,7 +163,7 @@ if clock_in:
                 mins, secs = divmod(remainder, 60)
                 
                 # This overwrites the placeholder every second
-                countdown_placeholder.warning(f"⏳ Time until freedom: **{hrs}h {mins}m {secs}s**")
+                countdown_placeholder.warning(f"⏳ Time until Clock Out: **{hrs}h {mins}m {secs}s**")
                 time.sleep(1) # Wait 1 second before looping
             else:
                 countdown_placeholder.success("🎉 It's time to go home!")
