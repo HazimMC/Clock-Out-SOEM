@@ -62,7 +62,7 @@ def check_ot_time_left(ot_time):
 
 
 def calculate_times(clock_in_str):
-    is_late =  False
+    is_late =  "False"
     try:
         result_data, error = extract_time(clock_in_str)
         if error:
@@ -79,13 +79,15 @@ def calculate_times(clock_in_str):
 
         if combine_time < 730:
             adj_h, adj_m = 7, 30
+            is_late = "Early"
         elif 730 <= combine_time <= 930:
             pass 
         elif 930 < combine_time < 1130:
             adj_h, adj_m = 9, 30
-            is_late = True
+            is_late = "True"
         elif combine_time < 1215:
             adj_h, adj_m, half_day_flag = 7, 30, 0
+            is_late = "Early_Half"
         elif 1215 <= combine_time <= 1415:
             half_day_flag = 0
             # Adjustment logic
@@ -93,6 +95,7 @@ def calculate_times(clock_in_str):
             adj_h, adj_m = divmod(total_min, 60)
         elif combine_time > 1415:
             adj_h, adj_m, half_day_flag = 9, 30, 0
+            is_late = "True_half"
 
         return (adj_h, adj_m, half_day_flag, is_late), None
     except Exception:
@@ -114,8 +117,14 @@ if clock_in:
     else:
         h, m, half_day_flag, is_late = result_data
 
-        if is_late:
+        if is_late == "Early":
+            st.warning("⚠️ Early Clock-in!  \nYour clock-in has been adjusted to 07:30")
+        elif is_late == "Early_Half":
+            st.warning("⚠️ Early Clock-in!  \nYour clock-in has been adjusted to 12:15")
+        elif is_late == "True":
             st.warning("⚠️ LATE!  \nYour clock-in has been adjusted to 09:30")
+        elif is_late == "True_half":
+            st.warning("⚠️ LATE!  \nYour clock-in has been adjusted to 14:15")
         
         # Half Day Calculation
         half_out = check_if_minute_is_over(h + 4, m + 45)
